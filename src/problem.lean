@@ -10,12 +10,9 @@ open function
   (abs (x - c) ≤ δ) → (abs (y -c) ≤ δ ) → (abs (f x - f y) < ε) 
 @[simp] def sublinear (f : ℝ → ℝ) : Prop := 
   ∀ (x: ℝ), ∃{c d : ℝ}, abs (f x) < c + d * abs x 
-@[simp] def get_real  : ℕ → ℝ 
-| 0       := (0: ℝ)
-| (n + 1) := get_real n + (1 : ℝ) 
 lemma zongshu {f: ℝ → ℝ} (k: ℕ): 
   (continuous f) → ∃(δ ∈ positive_reals),
-    ∀x, (abs x ≤ (get_real k * δ)) → (abs (f x - f 0) ≤ get_real k):=
+    ∀x, (abs x ≤ (↑k * δ)) → (abs (f x - f 0) ≤ ↑k):=
 begin 
   intro cf,
   have og : (1 : ℝ) > 0 := by norm_num, --one is greater than zero
@@ -25,8 +22,8 @@ begin
     --base case is basically just expand the hypotheses
     --and the zeros cancel everything out so it's trivial
     rcases εeq1 0 with ⟨δ, ⟨δpos, q⟩⟩, 
-    use [δ, δpos], 
-    simp only [get_real], --replace (0 : ℕ) with (0 : ℝ)
+    use [δ, δpos],
+    rw nat.cast_zero,
     rw zero_mul,
     intros x h,
     --abs x ≤ 0 implies x = 0 
@@ -51,7 +48,7 @@ begin
     --δ₂ 
 
     --h' comes from subtracting δ from both sides of h
-    have h' : abs (x) - δ ≤ get_real k * δ := by linarith,
+    have h' : abs (x) - δ ≤ ↑k * δ := by linarith,
     cases lt_or_ge δ x with xbig δbig,
     {
       --if x > δ: x - δ was the center of the previous case
@@ -89,8 +86,47 @@ begin
         have constraints := abs_le'.mpr ⟨δbig, negxsmall⟩,
         --another step I skipped
         --happens when |x| < δ 
-        --shouldn't really happen, because δ can get arbitrarily small???
-        sorry,
+        --shouldn't really happen at later stages of induction
+        cases k,
+        {
+          have next := r x 0,
+
+          rw sub_self at next,
+          rw abs_zero at next,
+          rw zero_sub at next,
+          rw abs_neg at next,
+          have next' := next (le_of_lt δ₂pos),
+          dsimp at δpos,
+          rw abs_of_pos δpos at bruh,
+          have next'key := le_trans constraints bruh,
+          rw nat.cast_zero,
+          rw zero_add,
+          exact le_of_lt (next' next'key),
+        },
+        {
+          have skpos := nat.succ_pos k,
+          have prev := ind x,
+          dsimp at prev,
+          rw add_mul at prev,
+          rw one_mul at prev,
+          have : abs x ≤ ↑k * δ + δ,
+          {
+            apply le_trans constraints,
+            have : (0 : ℝ) ≤ ↑k := nat.cast_nonneg k,
+            have finally := mul_le_mul this (le_refl δ) (le_of_lt δpos) this,
+            rw zero_mul at finally,
+            linarith,
+          },
+          have almost := prev this,
+          rw nat.succ_eq_add_one,
+          apply le_trans almost,
+          rw add_le_add_iff_right, 
+          have : ↑k ≤ ↑k + (1 :ℝ),
+          {
+            linarith,
+          },
+          convert this,
+        },
       },
 
       --this case is where x is negative
