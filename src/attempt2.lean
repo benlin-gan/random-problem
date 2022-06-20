@@ -106,7 +106,11 @@ begin
   intro x,
   have near_int : ∃(n : ℤ), abs(x - n * δ) ≤ δ ∧ (abs (↑n) * δ) < abs x,
   {
-    sorry,
+    cases lt_or_ge x 0 with xneg xnneg,
+    {
+      
+      
+    }
   },
   rcases near_int with ⟨n, ⟨a, int_bound⟩⟩, 
   have q := nbound n,
